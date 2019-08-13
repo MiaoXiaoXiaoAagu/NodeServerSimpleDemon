@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>file-upload</title>
+</head>
+<body>
+<div class="container" style="background-color: aquamarine">
+   <h1>单文件上传</h1>
+   <input id="fileInput" type="file"><!--单文件上传-->
+   <button id="uploadBtn">点击上传</button>
+   <img id="img" alt="图片预览" src=""/>
+</div>
+<div class="container">
+    <h1>多文件上传</h1>
+    <input id="multiFileInput" type="file" multiple><!--多文件上传-->
+    <button id="multiUploadBtn">点击上传</button>
+</div>
+
+
+</body>
+<style>
+    .container{
+        float: left;
+        height: 500px;
+        width: 50%;
+    }
+</style>
+<script>
+    const url="http://127.0.0.1:3333/";
+    let fileInput=document.getElementById("fileInput");
+    let uploadBtn=document.getElementById("uploadBtn");
+
+    let multiFileInput=document.getElementById("multiFileInput");
+    let multiUploadBtn=document.getElementById("multiUploadBtn");
+    // 待上传文件预览
+    fileInput.onchange=function (event) {
+        if(!window.FileReader){
+            alert("该浏览器不FileReader无法上传文件");
+            return false;
+        }
+
+        let file = event.target.files[0];// 获取input中的文件
+        let reader = new FileReader();
+        reader.readAsDataURL(file);// 读取文件为图片src
+        reader.onload=function (e) {
+            let img=document.getElementById("img");
+            img.src=e.target.result;// 设置<img>标签src展示图片
+        }
+    };
+
+    function getTest(){
+        let request=new XMLHttpRequest();
+        request.open("GET",url+"getTest");
+        request.send();
+        request.onreadystatechange=function () {
+            if(request.readyState===4&&200===request.status){
+                alert(request.responseText);
+            }
+        }
+    }
+    function postTest() {
+        let request=new XMLHttpRequest();
+        request.open("POST",url+"postTest");
+        request.setRequestHeader("Content-Type","application/json");
+        let data={
+            postData:"from client to server"
+        };
+        request.send(JSON.stringify(data));
+
+        request.onreadystatechange=function () {
+            if(request.readyState===4&&200===request.status){
+                alert(request.responseText);
+            }
+        }
+    }
+
+    function uploadFile(){
+        let file=fileInput.files?fileInput.files:[];// 若文件为空则赋值为空数组[]
+        if(!file.length){
+            alert("请选择文件");
+            return false;
+        }
+        let data=new FormData();
+        data.append("file",file[0]);//input可以一次选择多个文件，所以file是数组  单文件上传"file",多文件上传"files"
+        let request=new XMLHttpRequest();
+        request.open("POST",url+'upload/single');
+        request.send(data);
+        request.onreadystatechange=function () {
+            if(request.readyState===4&&request.status===200){
+                alert("上传成功");
+            }
+        }
+    }
+
+    function uploadMultiFile(){
+        let files=multiFileInput.files?multiFileInput.files:[];// 若文件为空则赋值为空数组[]
+        console.log(files);
+        if(!files.length){
+            alert("请选择文件");
+            return false;
+        }
+        let data=new FormData();
+        for(let index in files)
+        {
+            data.append("files",files[index]);
+        }
+        let request=new XMLHttpRequest();
+        request.open("POST",url+'upload/multi');
+        request.send(data);
+        request.onreadystatechange=function () {
+            if(request.readyState===4&&request.status===200){
+                alert("上传成功");
+            }
+        }
+    }
+
+
+    uploadBtn.onclick=function () {// 单文件上传
+        //getTest();
+        //postTest();
+        uploadFile();
+    };
+    multiUploadBtn.onclick=function () {// 多文件上传
+        uploadMultiFile();
+    }
+
+
+</script>
+</html>
